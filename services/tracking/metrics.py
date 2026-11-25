@@ -83,21 +83,6 @@ def sync_metrics_update(context):
     for key, default in fields.items():
         st.session_state[key] = latest_metrics.get(key, default)
 
-    # [NEW: coaching] Feed rep stream into guided workout runner if active
-    runner = st.session_state.get("workout_runner")
-    if runner is not None and st.session_state.get("workout_mode") == "guided":
-        from services.adaptive import calculate_rep_form_score
-        form_score = calculate_rep_form_score(latest_metrics, exercise)
-        pipeline = st.session_state.get("voice_pipeline")
-        issue = pipeline._find_form_issue(exercise, latest_metrics) if pipeline else None
-        flagged = [issue] if issue else []
-        runner.update_reps_from_detector(
-            detector_reps=reps,
-            metrics=latest_metrics,
-            form_score=form_score,
-            flagged_errors=flagged,
-        )
-
     # ---------------- Set progress ----------------
     reps_per_set = int(st.session_state.get("reps_per_set", 0) or 0)
     target_sets = int(st.session_state.get("target_sets", 0) or 0)

@@ -33,12 +33,10 @@ Thumbs.db
 .coverage
 htmlcov/
 
-# Local database and progression data
+# Local database files
 *.db
 *.sqlite
 *.sqlite3
-data/
-
 
 # Local Streamlit configuration
 .streamlit/config.toml
