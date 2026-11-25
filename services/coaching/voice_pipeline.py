@@ -81,8 +81,36 @@ class VoicePipeline:
         voice = self.tts.speak(text)
 
         self.last_spoken_at = now
+        # [NEW: coaching] Mark timestamp of live form correction to enforce priority
+        if issue:
+            self.last_form_cue_at = now
 
         return voice, text
+
+    # [NEW: coaching] Direct speech synthesis with priority queuing
+    def speak_direct(self, text: str, is_form_cue: bool = False):
+        """Synthesize speech using existing TTS engine.
+        Form correction cues take priority and cannot be overwritten by general plan cues.
+        """
+        now = time.time()
+        last_form = getattr(self, "last_form_cue_at", 0)
+
+        # Do not allow general plan cues to talk over a recent live form cue (within 4 seconds)
+        if not is_form_cue and (now - last_form) < 4.0:
+            return None
+
+        cleaned = (text or "").strip()
+        if not cleaned:
+            return None
+
+        voice = self.tts.speak(cleaned)
+        if voice:
+            self.last_spoken_at = now
+            if is_form_cue:
+                self.last_form_cue_at = now
+            return voice, cleaned
+        return None
+
     
 
 def autoplay_audio(audio_bytes):
